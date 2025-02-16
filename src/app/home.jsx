@@ -7,9 +7,7 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
-  query,
   setDoc,
-  where,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -29,40 +27,41 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [taskName, setTaskName] = useState("");
 
-  const tasksRef = collection(db, "tasks");
-
   useEffect(() => {
     const currentUser = auth.currentUser;
-    setUser(currentUser);
+    if (!currentUser) return;
 
+    setUser(currentUser);
     setLoading(true);
-    const q = query(tasksRef, where("uid", "==", currentUser.uid));
+
+    const userTasksRef = collection(db, `users/${currentUser.uid}/tasks`);
 
     const unsubscribe = onSnapshot(
-      q,
+      userTasksRef,
       (querySnapshot) => {
-        const newTasks = [];
-        querySnapshot.forEach((doc) => {
-          const task = doc.data();
-          task.id = doc.id;
-          newTasks.push(task);
-        });
+        const newTasks = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setTasks(newTasks);
         setLoading(false);
       },
       (error) => {
-        console.log(error);
+        console.error("Error fetching tasks:", error);
         setLoading(false);
       }
     );
+
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
   const onComplete = async (taskId) => {
     try {
       const task = tasks.find((task) => task.id === taskId);
-      task.completed = !task.completed;
-      await setDoc(doc(db, "tasks", task.id), task);
+      if (!task) return;
+
+      const taskRef = doc(db, `users/${user.uid}/tasks`, task.id);
+      await setDoc(taskRef, { ...task, completed: !task.completed });
     } catch (error) {
       console.error("Error updating task:", error);
     }
@@ -70,24 +69,22 @@ const HomeScreen = () => {
 
   const onDelete = async (taskId) => {
     try {
-      await deleteDoc(doc(db, "tasks", taskId));
+      await deleteDoc(doc(db, `users/${user.uid}/tasks`, taskId));
     } catch (error) {
       console.error("Error deleting task:", error);
     }
   };
 
-  const onAddTask = async (taskName) => {
-    if (!taskName) {
-      return;
-    }
+  const onAddTask = async () => {
+    if (!taskName.trim()) return;
 
     try {
       const task = {
         name: taskName,
         completed: false,
-        uid: user.uid,
       };
-      await addDoc(tasksRef, task);
+      const userTasksRef = collection(db, `users/${user.uid}/tasks`);
+      await addDoc(userTasksRef, task);
       setTaskName("");
     } catch (error) {
       console.error("Error adding task:", error);
@@ -103,10 +100,10 @@ const HomeScreen = () => {
           onChangeText={setTaskName}
           placeholder="Task Name"
           className="p-4 border border-gray-300 rounded-lg mb-4 flex-1 mr-2"
-          onSubmitEditing={() => onAddTask(taskName)}
+          onSubmitEditing={onAddTask}
         />
         <TouchableOpacity
-          onPress={() => onAddTask(taskName)}
+          onPress={onAddTask}
           className="flex-row bg-blue-500 p-4 rounded-lg mb-4 items-center"
         >
           <AddCircle fill="#fff" />
