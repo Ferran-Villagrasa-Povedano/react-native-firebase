@@ -1,20 +1,19 @@
-import { auth, db } from "@src/firebase/firebase";
+import { auth } from "@src/services/firebase";
 import { useRouter } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const usernameRef = useRef(null);
+  const displayNameRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
@@ -36,14 +35,9 @@ export default function RegisterScreen() {
         email,
         password
       );
-      const uid = userCredential.user.uid;
-      const data = {
-        id: uid,
-        email,
-        name,
-      };
-
-      await setDoc(doc(db, "users", uid), data);
+      updateProfile(userCredential.user, {
+        displayName,
+      });
       router.replace("/home");
     } catch (error) {
       alert(error.message);
@@ -57,10 +51,10 @@ export default function RegisterScreen() {
       <Text className="text-3xl font-bold text-center mb-8">Register</Text>
 
       <TextInput
-        ref={usernameRef}
-        value={name}
-        onChangeText={setName}
-        placeholder="User Name"
+        ref={displayNameRef}
+        value={displayName}
+        onChangeText={setDisplayName}
+        placeholder="Display Name"
         className="p-4 border border-gray-300 rounded-lg mb-4"
         onSubmitEditing={() => emailRef.current.focus()}
       />

@@ -1,5 +1,5 @@
 import Task from "@components/Task";
-import { auth, db } from "@src/firebase/firebase";
+import { auth, db } from "@src/services/firebase";
 import { useRouter } from "expo-router";
 import {
   addDoc,

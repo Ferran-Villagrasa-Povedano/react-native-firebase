@@ -1,4 +1,4 @@
-import { auth } from "@src/firebase/firebase";
+import { auth } from "@src/services/firebase";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useRef, useState } from "react";

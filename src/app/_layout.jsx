@@ -1,9 +1,9 @@
 import Avatar from "@components/Avatar";
-import { auth } from "@src/firebase/firebase";
 import "@src/global.css";
+import { auth } from "@src/services/firebase";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Button, Modal, Text, TouchableOpacity, View } from "react-native";
+import { Modal, Text, TouchableOpacity, View } from "react-native";
 
 export default function Layout() {
   const [user, setUser] = useState(null);
@@ -57,9 +57,15 @@ export default function Layout() {
         >
           <View className="absolute top-16 right-5 bg-white p-4 rounded-lg w-48 shadow-lg">
             <Text className="mb-3 font-semibold text-black">
-              {user?.displayName || user?.email}
+              {user?.displayName}
             </Text>
-            <Button title="Logout" onPress={handleLogout} />
+            <Text className="mb-3 font-semibold text-black">{user?.email}</Text>
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="bg-blue-500 p-2 rounded-lg"
+            >
+              <Text className="text-white text-center font-bold">Log out</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>

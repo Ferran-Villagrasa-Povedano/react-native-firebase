@@ -4,14 +4,10 @@ export default function Avatar({ user }) {
   return (
     <Image
       source={{
-        uri: `https://avatar.iran.liara.run/username?username=${user.email}`,
+        uri: `https://avatar.iran.liara.run/username?username=${user.displayName}`,
       }}
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 10,
-      }}
+      className="rounded-full w-10 h-10"
+      alt={user.displayName}
     />
   );
 }
