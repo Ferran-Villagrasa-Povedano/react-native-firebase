@@ -1,6 +1,85 @@
+import Avatar from "@components/Avatar";
+import { auth } from "@src/firebase/firebase";
 import "@src/global.css";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Button, Modal, Text, TouchableOpacity, View } from "react-native";
 
 export default function Layout() {
-  return <Stack />;
+  const [user, setUser] = useState(null);
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        router.replace("/home");
+      } else {
+        router.replace("/login");
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      checkAuthStatus();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [router]);
+
+  const toggleDropdown = () => setDropdownVisible(!isDropdownVisible);
+
+  const handleLogout = () => {
+    auth.signOut();
+    setDropdownVisible(false);
+    router.replace("/login");
+  };
+
+  return (
+    <>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: "#3f3f3f" },
+          headerTintColor: "white",
+          headerRight: () =>
+            user && (
+              <TouchableOpacity
+                onPress={toggleDropdown}
+                style={{ paddingRight: 10 }}
+              >
+                <Avatar user={user} />
+              </TouchableOpacity>
+            ),
+        }}
+      />
+
+      <Modal
+        transparent
+        animationType="fade"
+        visible={isDropdownVisible}
+        onRequestClose={() => setDropdownVisible(false)}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/20 justify-center items-center"
+          onPress={() => setDropdownVisible(false)}
+        >
+          <View className="absolute top-16 right-5 bg-white p-4 rounded-lg w-48 shadow-lg">
+            <Text className="mb-3 font-semibold text-black">
+              {user?.displayName || user?.email}
+            </Text>
+            <Button title="Logout" onPress={handleLogout} />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
+  );
 }

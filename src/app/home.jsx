@@ -1,40 +1,86 @@
-import { auth } from "@src/firebase/firebase";
+import Task from "@components/Task";
+import { auth, db } from "@src/firebase/firebase";
 import { useRouter } from "expo-router";
-import { signOut } from "firebase/auth";
+import {
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 
 const HomeScreen = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const tasksRef = collection(db, "tasks");
 
   useEffect(() => {
     const currentUser = auth.currentUser;
     setUser(currentUser);
-  }, []);
 
-  const handleLogout = async () => {
+    setLoading(true);
+    const q = query(
+      tasksRef,
+      where("uid", "==", currentUser.uid)
+      // orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        const newTasks = [];
+        querySnapshot.forEach((doc) => {
+          const task = doc.data();
+          task.id = doc.id;
+          newTasks.push(task);
+        });
+        setTasks(newTasks);
+        setLoading(false);
+      },
+      (error) => {
+        console.log(error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const onComplete = async (taskId) => {
     try {
-      await signOut(auth);
-      router.push("/login");
-    } catch (err) {
-      console.error("Error signing out: ", err);
+      const task = tasks.find((task) => task.id === taskId);
+      task.completed = !task.completed;
+      await setDoc(doc(db, "tasks", task.id), task);
+    } catch (error) {
+      console.error("Error updating task:", error);
     }
   };
 
+  //r4lHWwC66gFxySyd5uCh
   return (
-    <View className="flex-1 justify-center items-center p-4 bg-white">
-      <Text className="text-3xl font-bold mb-4">
-        {user ? `Hello, ${user.displayName || user.email}` : "Loading..."}
-      </Text>
+    // <Task task={tasks[0]} onComplete={onComplete} />
 
-      <TouchableOpacity
-        onPress={handleLogout}
-        className="bg-red-500 p-4 rounded-lg"
-      >
-        <Text className="text-white text-center font-bold">Logout</Text>
-      </TouchableOpacity>
+    <View className="">
+      <Text className="text-3xl font-bold text-center mt-3 mb-8">Tasks</Text>
+      <FlatList
+        data={tasks}
+        renderItem={({ item }) => <Task task={item} onComplete={onComplete} />}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center">
+            <Text>No tasks</Text>
+          </View>
+        }
+      />
     </View>
+
+    // test@gmail.com
   );
 };
 

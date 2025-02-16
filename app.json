@@ -1,7 +1,8 @@
 {
   "expo": {
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "displayName": "Mi test"
     }
   }
 }

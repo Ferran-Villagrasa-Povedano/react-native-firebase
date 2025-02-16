@@ -9,8 +9,10 @@ const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
+    setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/home");
@@ -50,7 +52,10 @@ const LoginScreen = () => {
 
       <View className="flex-row justify-center mt-4">
         <Text className="mr-2">Don't have an account?</Text>
-        <TouchableOpacity onPress={() => router.push("/register")}>
+        <TouchableOpacity
+          onPress={() => router.push("/register")}
+          disabled={isLoading}
+        >
           <Text className="text-blue-500">Sign up</Text>
         </TouchableOpacity>
       </View>
