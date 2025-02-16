@@ -2,7 +2,7 @@ import { auth, db } from "@src/firebase/firebase";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function RegisterScreen() {
@@ -14,7 +14,17 @@ export default function RegisterScreen() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const usernameRef = useRef(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
+
   const handleRegister = async () => {
+    if (auth.currentUser) {
+      router.push("/home");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords don't match.");
       return;
@@ -34,7 +44,7 @@ export default function RegisterScreen() {
       };
 
       await setDoc(doc(db, "users", uid), data);
-      router.push("/home");
+      router.replace("/home");
     } catch (error) {
       alert(error.message);
     } finally {
@@ -47,34 +57,42 @@ export default function RegisterScreen() {
       <Text className="text-3xl font-bold text-center mb-8">Register</Text>
 
       <TextInput
+        ref={usernameRef}
         value={name}
         onChangeText={setName}
         placeholder="User Name"
         className="p-4 border border-gray-300 rounded-lg mb-4"
+        onSubmitEditing={() => emailRef.current.focus()}
       />
 
       <TextInput
+        ref={emailRef}
         value={email}
         onChangeText={setEmail}
         placeholder="Email"
         keyboardType="email-address"
         className="p-4 border border-gray-300 rounded-lg mb-4"
+        onSubmitEditing={() => passwordRef.current.focus()}
       />
 
       <TextInput
+        ref={passwordRef}
         value={password}
         onChangeText={setPassword}
         placeholder="Password"
         secureTextEntry
         className="p-4 border border-gray-300 rounded-lg mb-4"
+        onSubmitEditing={() => confirmPasswordRef.current.focus()}
       />
 
       <TextInput
+        ref={confirmPasswordRef}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         placeholder="Confirm Password"
         secureTextEntry
         className="p-4 border border-gray-300 rounded-lg mb-4"
+        onSubmitEditing={() => handleRegister()}
       />
 
       {error && <Text className="text-red-500 text-center mb-4">{error}</Text>}

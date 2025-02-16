@@ -18,24 +18,6 @@ export default function Layout() {
   }, []);
 
   const router = useRouter();
-
-  useEffect(() => {
-    const checkAuthStatus = () => {
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        router.replace("/home");
-      } else {
-        router.replace("/login");
-      }
-    };
-
-    const timeoutId = setTimeout(() => {
-      checkAuthStatus();
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [router]);
-
   const toggleDropdown = () => setDropdownVisible(!isDropdownVisible);
 
   const handleLogout = () => {
@@ -50,6 +32,7 @@ export default function Layout() {
         screenOptions={{
           headerStyle: { backgroundColor: "#3f3f3f" },
           headerTintColor: "white",
+          headerTitle: "Todo List",
           headerRight: () =>
             user && (
               <TouchableOpacity
